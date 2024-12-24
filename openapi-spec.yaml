@@ -1,0 +1,200 @@
+openapi: 3.0.3
+info:
+  title: Venue Booker
+  description: |
+    This is the specification for a venue booking management system.
+  contact:
+    email: jus4me2009@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+servers:
+  - url: https://petstore3.swagger.io/api/v3
+tags:
+  - name: User
+    description: User management
+  - name: Session
+    description: Internal Session management
+  - name: Account
+    description: Account management
+  - name: Venue
+    description: Venue Listing management
+  - name: Slot
+    description: Venue Slots management
+  - name: Booking
+    description: Venue Bookings management
+  - name: Payment
+    description: Payment Transactions
+  - name: History
+    description: Booking History management
+  - name: Admin
+    description: Administrative Users
+paths:
+  /user/signup:
+    post:
+      tags:
+        - User
+      summary: Create a new signup for a customer
+      description: Create a new customer account on sign up
+      operationId: signup
+      requestBody:
+        description: New customer sign up form
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupForm'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/SignupForm'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulSignup'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SuccessfulSignup'
+        '400':
+          description: Invalid data supplied
+        '422':
+          description: Validation exception
+  /user/login:
+    get:
+      tags:
+        - User
+      summary: Logs user into the system
+      description: ''
+      operationId: loginUser
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: The password hash for login
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionToken'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SessionToken'
+        '400':
+          description: Wrong Username/Password combination
+  /user/logout:
+    get:
+      tags:
+        - User
+      summary: Logs out current logged in user session
+      description: ''
+      operationId: logoutUser
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: true
+          schema:
+            type: string
+        - name: sessionToken
+          in: query
+          description: Currently active Session Token ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully logged out
+        '400':
+          description: Data missing or incorrect
+components:
+  schemas:
+    SessionToken:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          example: 2789d238-4fcd-4e8a-ad0e-760ab3414d63
+        sessionCreatedAt:
+          type: string
+          description: Date time when session token created
+          example: 12/25/2024
+        sessionExpiresAfter:
+          type: string
+          description: Ticks after `sessionCreatedAt` after which session token expires
+          example: 360000
+        accountRole:
+          type: string
+          enum:
+            - CUSTOMER
+            - ADMIN
+            - DEVELOPER
+          example: CUSTOMER
+        accountId:
+          type: string
+          example: 321654987
+    SuccessfulSignup:
+      type: object
+      properties:
+        accountId:
+          type: string
+          example: 321654987
+        role:
+          type: string
+          enum: 
+            - CUSTOMER
+            - ADMIN
+            - DEVELOPER
+          example: CUSTOMER
+        message:
+          type: string
+          example: Account Created Successfully
+    SignupForm:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        username:
+          type: string
+          example: theUser
+        password:
+          type: string
+          description: |
+            Contains a password hash instead of actual password.
+          example: '42dce01e866bd024be481aa11dcbcea8d84cd2856950431f02544bc6957fb3a2'
+        email:
+          type: string
+          example: john@email.com
+        phone:
+          type: string
+          minLength: 10
+          maxLength: 10
+          example: '7894561230'
+      xml:
+        name: user
+  requestBodies:
+    SignupForm:
+      description: New customer sign up form
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SignupForm'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/SignupForm'

@@ -39,25 +39,10 @@ paths:
       description: Create a new customer account on sign up
       operationId: signup
       requestBody:
-        description: New customer sign up form
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SignupForm'
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/SignupForm'
+        $ref: '#/components/requestBodies/SignupForm'
       responses:
         '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulSignup'
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/SuccessfulSignup'
+          $ref: '#/components/responses/SuccessfulSignup'
         '400':
           description: Invalid data supplied
         '422':
@@ -70,28 +55,11 @@ paths:
       description: ''
       operationId: loginUser
       parameters:
-        - name: username
-          in: query
-          description: The user name for login
-          required: true
-          schema:
-            type: string
-        - name: password
-          in: query
-          description: The password hash for login
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/PasswordHash'
       responses:
         '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SessionToken'
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/SessionToken'
+          $ref: '#/components/responses/SessionToken'
         '400':
           description: Wrong Username/Password combination
   /user/logout:
@@ -102,95 +70,446 @@ paths:
       description: ''
       operationId: logoutUser
       parameters:
-        - name: username
-          in: query
-          description: The user name for login
-          required: true
-          schema:
-            type: string
-        - name: sessionToken
-          in: query
-          description: Currently active Session Token ID
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/SessionToken'
       responses:
         '200':
           description: Successfully logged out
         '400':
           description: Data missing or incorrect
+  /session/token:
+    post:
+      tags:
+        - Session
+      summary: Create a new session token
+      description: ''
+      operationId: createToken
+      requestBody:
+        $ref: '#/components/requestBodies/TokenRegistration'
+      responses:
+        '200':
+          $ref: '#/components/responses/SessionToken'
+        '400':
+          description: Invalid data supplied
+        '422':
+          description: Validation exception
+  /session/token/validate:
+    get:
+      tags:
+        - Session
+      summary: Validate session token
+      description: ''
+      operationId: validateSession
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/SessionToken'
+        '400':
+          description: Invalid data supplied
+        '422':
+          description: Validation exception
+  /session/token/revoke:
+    delete:
+      tags:
+        - Session
+      summary: Revoke session token
+      description: ''
+      operationId: revokeSession
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '204':
+          description: Session Ended
+        '400':
+          description: Invalid data supplied
+        '422':
+          description: Validation exception
+  /session/token/authorizeRole:
+    get:
+      tags:
+        - Session
+      summary: Authorize role and permissions
+      description: ''
+      operationId: authorizeRole
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/SessionToken'
+        '400':
+          description: Invalid data supplied
+        '422':
+          description: Validation exception
+  /account/view/{accountId}:
+    get:
+      tags:
+        - Account
+      summary: View account details
+      description: ''
+      operationId: viewAccount
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          $ref: '#/components/responses/AccountDetails'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Account not found
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - Account
+      summary: Update account details
+      description: ''
+      operationId: updateAccount
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        $ref: '#/components/requestBodies/AccountDetails'
+      responses:
+        '200':
+          $ref: '#/components/responses/AccountDetails'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Account not found
+        '422':
+          description: Validation exception
+  /venues:
+    post:
+      tags:
+        - Admin
+      summary: Create new venue
+      description: ''
+      operationId: createVenue
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      requestBody:
+        $ref: '#/components/requestBodies/VenueDetails'
+      responses:
+        '200':
+          $ref: '#/components/responses/VenueDetails'
+        '400':
+          description: Invalid data supplied
+        '422':
+          description: Validation exception
+    get:
+      tags:
+        - Venue
+      summary: Fetch all venues
+      description: ''
+      operationId: getVenues
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/VenueList'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Venues not found
+        '422':
+          description: Validation exception
+  /venues/{venueId}:
+    get:
+      tags:
+        - Venue
+      summary: Get venue details
+      description: ''
+      operationId: getVenueDetails
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/VenueId'
+      responses:
+        '200':
+          $ref: '#/components/responses/VenueDetails'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Venue not found
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - Admin
+      summary: Update venue details
+      description: ''
+      operationId: updateVenueDetails
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/VenueId'
+      requestBody:
+        $ref: '#/components/requestBodies/VenueDetails'
+      responses:
+        '200':
+          $ref: '#/components/responses/VenueDetails'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Venue not found
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - Admin
+      summary: Delete venue
+      description: ''
+      operationId: deleteVenue
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/VenueId'
+      responses:
+        '204':
+          description: Venue deleted successfully
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Venue not found
+        '422':
+          description: Validation exception
 components:
+  parameters:
+    Username:
+      name: username
+      in: query
+      description: The user name for login
+      required: true
+      schema:
+        type: string
+      example: theUser
+    PasswordHash:
+      name: password
+      in: query
+      description: The password hash for login
+      required: true
+      schema:
+        type: string
+      example: '42dce01e866bd024be481aa11dcbcea8d84cd2856950431f02544bc6957fb3a2'
+    SessionToken:
+      name: sessionToken
+      in: query
+      description: Currently active Session Token ID
+      required: true
+      schema:
+        type: string
+        example: 2789d238-4fcd-4e8a-ad0e-760ab3414d63
+    AccountId:
+      name: accountId
+      in: path
+      description: The account ID currently active
+      required: true
+      schema:
+        $ref: '#/components/schemas/AccountId'
+    VenueId:
+      name: venueId
+      in: path
+      description: The ID for the venue
+      required: true
+      schema:
+        $ref: '#/components/schemas/VenueId'
   schemas:
+    # PRIMITIVES
+
+    Username:
+      type: string
+      description: Username of the account
+      example: theUser
+    FirstName:
+      type: string
+      description: First name of the account holder
+      example: John
+    LastName:
+      type: string
+      description: Last name of the account holder
+      example: James
+    Email:
+      type: string
+      description: Email address of the account holder
+      example: john@email.com
+    Phone:
+      type: string
+      minLength: 10
+      maxLength: 10
+      example: '7894561230'
+    Password:
+      type: string
+      description: |
+        Contains a password hash instead of actual password.
+      example: '42dce01e866bd024be481aa11dcbcea8d84cd2856950431f02544bc6957fb3a2'
+    AccountId:
+      type: string
+      description: ID of the account
+      example: '321654987'
+    AccountRole:
+      type: string
+      description: Role for which the account has permissions
+      enum:
+        - CUSTOMER
+        - ADMIN
+        - DEVELOPER
+      example: CUSTOMER
+    SessionId:
+      type: string
+      description: Server-generated GUID denoting session
+      example: '2789d238-4fcd-4e8a-ad0e-760ab3414d63'
+    VenueId:
+      type: string
+      description: Server-generated GUID for venue
+      example: 'c124030d-85f6-473f-9670-af3a101d6203'
+    VenueName:
+      type: string
+      description: Name of the venue
+      example: 'Amazing Venue Club'
+    AddressLine1:
+      type: string
+      description: First line of address
+      example: '3608, 414 Reilly Point Apt. 188'
+    AddressLine2:
+      type: string
+      description: Second (optional) line of address
+      example: 'Zoie Oval'
+    City:
+      type: string
+      description: City of address
+      example: 'Shillong'
+    State:
+      type: string
+      description: State of address
+      example: 'Meghalaya'
+    PostCode:
+      type: string
+      minLength: 6
+      maxLength: 6
+      description: Post Code of address
+      example: '793001'
+
+    # END PRIMITIVES
+
+    VenueAddress:
+      type: object
+      properties:
+        address1:
+          $ref: '#/components/schemas/AddressLine1'
+        address2:
+          $ref: '#/components/schemas/AddressLine2'
+        city:
+          $ref: '#/components/schemas/City'
+        state:
+          $ref: '#/components/schemas/State'
+        postalCode:
+          $ref: '#/components/schemas/PostCode'
+    VenueDetails:
+      type: object
+      properties:
+        venueId:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/VenueId'
+        venueName:
+          $ref: '#/components/schemas/VenueName'
+        venueAddress:
+          $ref: '#/components/schemas/VenueAddress'
+      xml:
+        name: venue
+    AccountDetails:
+      type: object
+      properties:
+        username:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/Username'
+        firstName:
+          $ref: '#/components/schemas/FirstName'
+        lastName:
+          $ref: '#/components/schemas/LastName'
+        email:
+          $ref: '#/components/schemas/Email'
+        phone:
+          $ref: '#/components/schemas/Phone'
+      xml:
+        name: account_details
+    TokenRegistration:
+      type: object
+      properties:
+        accountId:
+          $ref: '#/components/schemas/AccountId'
+        accountRole:
+          $ref: '#/components/schemas/AccountRole'
+      xml:
+        name: register_token
     SessionToken:
       type: object
       properties:
         sessionId:
-          type: string
-          example: 2789d238-4fcd-4e8a-ad0e-760ab3414d63
+          $ref: '#/components/schemas/SessionId'
         sessionCreatedAt:
           type: string
+          format: date-time
           description: Date time when session token created
-          example: 12/25/2024
+          example: '2024-12-21T17:32:28Z'
+        sessionLastModifiedOn:
+          type: string
+          format: date-time
+          description: Date time when session token created
+          example: '2024-12-23T17:32:28Z'
         sessionExpiresAfter:
           type: string
           description: Ticks after `sessionCreatedAt` after which session token expires
-          example: 360000
+          example: '360000'
         accountRole:
-          type: string
-          enum:
-            - CUSTOMER
-            - ADMIN
-            - DEVELOPER
-          example: CUSTOMER
+          $ref: '#/components/schemas/AccountRole'
         accountId:
-          type: string
-          example: 321654987
+          $ref: '#/components/schemas/AccountId'
+      xml:
+        name: session_token
     SuccessfulSignup:
       type: object
       properties:
         accountId:
-          type: string
-          example: 321654987
-        role:
-          type: string
-          enum: 
-            - CUSTOMER
-            - ADMIN
-            - DEVELOPER
-          example: CUSTOMER
+          $ref: '#/components/schemas/AccountId'
+        accountRole:
+          $ref: '#/components/schemas/AccountRole'
         message:
           type: string
           example: Account Created Successfully
+      xml:
+        name: signup_response
     SignupForm:
       type: object
       properties:
         firstName:
-          type: string
-          example: John
+          $ref: '#/components/schemas/FirstName'
         lastName:
-          type: string
-          example: James
+          $ref: '#/components/schemas/LastName'
         username:
-          type: string
-          example: theUser
+          $ref: '#/components/schemas/Username'
         password:
-          type: string
-          description: |
-            Contains a password hash instead of actual password.
-          example: '42dce01e866bd024be481aa11dcbcea8d84cd2856950431f02544bc6957fb3a2'
+          $ref: '#/components/schemas/Password'
         email:
-          type: string
-          example: john@email.com
+          $ref: '#/components/schemas/Email'
         phone:
-          type: string
-          minLength: 10
-          maxLength: 10
-          example: '7894561230'
+          $ref: '#/components/schemas/Phone'
       xml:
         name: user
   requestBodies:
+    TokenRegistration:
+      description: New token registration form
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenRegistration'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/TokenRegistration'
     SignupForm:
       description: New customer sign up form
+      required: true
       content:
         application/json:
           schema:
@@ -198,3 +517,76 @@ components:
         application/xml:
           schema:
             $ref: '#/components/schemas/SignupForm'
+    AccountDetails:
+      description: Updated details of user account
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AccountDetails'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/AccountDetails'
+    VenueDetails:
+      description: Details of venue
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VenueDetails'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/VenueDetails'
+  responses:
+    SuccessfulSignup:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessfulSignup'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/SuccessfulSignup'
+    SessionToken:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionToken'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/SessionToken'
+    AccountDetails:
+      description: Details of user account
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AccountDetails'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/AccountDetails'
+    VenueDetails:
+      description: Details of venue
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VenueDetails'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/VenueDetails'
+    VenueList:
+      description: List of venues
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/VenueDetails'
+        application/xml:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/VenueDetails'
+            xml:
+              wrapped: true
+              name: venues

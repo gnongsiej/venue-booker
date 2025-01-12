@@ -224,7 +224,7 @@ paths:
       operationId: getVenueDetails
       parameters:
         - $ref: '#/components/parameters/SessionToken'
-        - $ref: '#/components/parameters/VenueId'
+        - $ref: '#/components/parameters/VenueIdPathParam'
       responses:
         '200':
           $ref: '#/components/responses/VenueDetails'
@@ -242,7 +242,7 @@ paths:
       operationId: updateVenueDetails
       parameters:
         - $ref: '#/components/parameters/SessionToken'
-        - $ref: '#/components/parameters/VenueId'
+        - $ref: '#/components/parameters/VenueIdPathParam'
       requestBody:
         $ref: '#/components/requestBodies/VenueDetails'
       responses:
@@ -262,7 +262,7 @@ paths:
       operationId: deleteVenue
       parameters:
         - $ref: '#/components/parameters/SessionToken'
-        - $ref: '#/components/parameters/VenueId'
+        - $ref: '#/components/parameters/VenueIdPathParam'
       responses:
         '204':
           description: Venue deleted successfully
@@ -272,6 +272,109 @@ paths:
           description: Venue not found
         '422':
           description: Validation exception
+  /slots:
+    post:
+      tags:
+        - Admin
+      summary: Add new slot
+      description: ''
+      operationId: addSlot
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      requestBody:
+        $ref: '#/components/requestBodies/SlotDetails'
+      responses:
+        '200':
+          $ref: '#/components/responses/SlotDetails'
+        '400':
+          description: Invalid data supplied
+        '422':
+          description: Validation exception
+    get:
+      tags:
+        - Slot
+      summary: Get slots by venue and date
+      description: ''
+      operationId: fetchSlots
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/VenueIdQueryParam'
+        - $ref: '#/components/parameters/RequestedDate'
+      responses:
+        '200':
+          $ref: '#/components/responses/SlotList'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Slots not found
+        '422':
+          description: Validation exception
+  /slots/{slotId}:
+    get:
+      tags:
+        - Slot
+      summary: Get details of slot by ID
+      description: ''
+      operationId: getSlotDetails
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/SlotIdPathParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SlotDetails'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Slot not found
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - Admin
+      summary: Update details of slot by ID
+      description: ''
+      operationId: updateSlotDetails
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/SlotIdPathParam'
+      requestBody:
+        $ref: '#/components/requestBodies/SlotDetails'
+      responses:
+        '200':
+          $ref: '#/components/responses/SlotDetails'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Slot not found
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - Admin
+      summary: Delete slot by ID
+      description: ''
+      operationId: deleteSlot
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/SlotIdPathParam'
+      responses:
+        '204':
+          description: Slot deleted successfully
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Slot not found
+        '422':
+          description: Validation exception
+  # /bookings:
+  #   post:
+  #     tags:
+  #       - Booking
+  #     summary: Create a new booking
+  #     description: ''
+  #     operationId: createBooking
+  #     parameters:
+  #       - $ref: '#/components/parameters/SessionToken'
 components:
   parameters:
     Username:
@@ -305,13 +408,37 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/AccountId'
-    VenueId:
+    VenueIdPathParam:
       name: venueId
       in: path
       description: The ID for the venue
       required: true
       schema:
         $ref: '#/components/schemas/VenueId'
+    VenueIdQueryParam:
+      name: venueId
+      in: query
+      description: The ID for the venue
+      required: true
+      schema:
+        $ref: '#/components/schemas/VenueId'
+    RequestedDate:
+      name: requestedDate
+      in: query
+      description: The date for which the request is to be made
+      required: true
+      schema:
+        type: string
+        format: date
+        example: '2025-02-02'
+    SlotIdPathParam:
+      name: slotId
+      in: path
+      description: The ID for the slot
+      required: true
+      schema:
+        $ref: '#/components/schemas/SlotId'
+    
   schemas:
     # PRIMITIVES
 
@@ -387,11 +514,45 @@ components:
       maxLength: 6
       description: Post Code of address
       example: '793001'
+    SlotId:
+      type: string
+      description: Server-generated GUID for slot
+      example: '455e9f09-cf30-4c49-bb80-8bf09ec90212'
 
     # END PRIMITIVES
 
+    SlotDetails:
+      type: object
+      properties:
+        slotId:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/SlotId'
+        slotStartTime:
+          type: string
+          format: date-time
+          description: Date and time when slot starts
+          example: '2025-02-02T09:00:00Z'
+        slotEndTime:
+          type: string
+          format: date-time
+          description: Date and time when slot ends
+          example: '2025-02-02T12:00:00Z'
+        bookingCost:
+          type: string
+          description: Cost (in Rs.) for booking this slot
+          example: '2000.00'
+        availability:
+          type: boolean
+          description: Returns true if slot is still available
+          example: true
     VenueAddress:
       type: object
+      required:
+        - address1
+        - city
+        - state
+        - postalCode
       properties:
         address1:
           $ref: '#/components/schemas/AddressLine1'
@@ -537,6 +698,16 @@ components:
         application/xml:
           schema:
             $ref: '#/components/schemas/VenueDetails'
+    SlotDetails:
+      description: Details of slot
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SlotDetails'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/SlotDetails'
   responses:
     SuccessfulSignup:
       description: Successful operation
@@ -590,3 +761,27 @@ components:
             xml:
               wrapped: true
               name: venues
+    SlotDetails:
+      description: Details of slot
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SlotDetails'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/SlotDetails'
+    SlotList:
+      description: List of slots on requested date
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SlotDetails'
+        application/xml:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SlotDetails'
+            xml:
+              name: slots

@@ -272,6 +272,26 @@ paths:
           description: Venue not found
         '422':
           description: Validation exception
+  /venues/{venueId}/bookings:
+    get:
+      tags:
+        - Admin
+      summary: Get all bookings for venue
+      description: ''
+      operationId: getVenueBookings
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/VenueIdPathParam'
+        - $ref: '#/components/parameters/RequestedDate'
+      responses:
+        '200':
+          $ref: '#/components/responses/BookingList'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Venue not found
+        '422':
+          description: Validation exception
   /slots:
     post:
       tags:
@@ -366,15 +386,135 @@ paths:
           description: Slot not found
         '422':
           description: Validation exception
-  # /bookings:
-  #   post:
-  #     tags:
-  #       - Booking
-  #     summary: Create a new booking
-  #     description: ''
-  #     operationId: createBooking
-  #     parameters:
-  #       - $ref: '#/components/parameters/SessionToken'
+  /bookings:
+    post:
+      tags:
+        - Booking
+      summary: Create a new booking
+      description: ''
+      operationId: createBooking
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      requestBody:
+        $ref: '#/components/requestBodies/BookingDetails'
+      responses:
+        '200':
+          $ref: '#/components/responses/BookingDetails'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Slot not found
+        '422':
+          description: Validation exception
+    get:
+      tags:
+        - Booking
+      summary: Get bookings made with account
+      description: ''
+      operationId: fetchBookings
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/BookingList'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Slots not found
+        '422':
+          description: Validation exception
+  /bookings/{bookingId}:
+    get:
+      tags:
+        - Booking
+      summary: Get details of booking by ID
+      description: ''
+      operationId: getBookingDetails
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/BookingIdPathParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/BookingDetails'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Slot not found
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - Booking
+      summary: Cancel a booking by ID
+      description: ''
+      operationId: cancelBooking
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/BookingIdPathParam'
+      responses:
+        '204':
+          description: Booking canceled successfully
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Booking not found
+        '422':
+          description: Validation exception
+  /bookings/date:
+    get:
+      tags:
+        - Admin
+      summary: Get confirmed bookings for date
+      description: ''
+      operationId: fetchBookingsByDate
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+        - $ref: '#/components/parameters/RequestedDate'
+      responses:
+        '200':
+          $ref: '#/components/responses/BookingList'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Venue not found
+        '422':
+          description: Validation exception
+  /payments:
+    post:
+      tags:
+        - Payment
+      summary: Record Transaction
+      description: ''
+      operationId: recordTransaction
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      requestBody:
+        $ref: '#/components/requestBodies/TransactionRecord'
+      responses:
+        '200':
+          $ref: '#/components/responses/TransactionRecord'
+        '400':
+          description: Invalid data supplied
+        '422':
+          description: Validation exception
+  /history:
+    get:
+      tags:
+        - History
+      summary: Fetch bookings for past 6 months for account
+      description: ''
+      operationId: fetchHistory
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/BookingList'
+        '400':
+          description: Invalid data supplied
+        '404':
+          description: Slots not found
+        '422':
+          description: Validation exception
 components:
   parameters:
     Username:
@@ -425,7 +565,10 @@ components:
     RequestedDate:
       name: requestedDate
       in: query
-      description: The date for which the request is to be made
+      description: |
+        The date for which the request is to be made.
+
+        If no date is provided, the current date will be used.
       required: true
       schema:
         type: string
@@ -438,7 +581,13 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/SlotId'
-    
+    BookingIdPathParam:
+      name: bookingId
+      in: path
+      description: The ID for the booking
+      required: true
+      schema:
+        $ref: '#/components/schemas/BookingId'
   schemas:
     # PRIMITIVES
 
@@ -518,6 +667,14 @@ components:
       type: string
       description: Server-generated GUID for slot
       example: '455e9f09-cf30-4c49-bb80-8bf09ec90212'
+    TransactionId:
+      type: string
+      description: Unique identification number generated by payment gateway to identify a successful transaction
+      example: '753498729423947'
+    BookingId:
+      type: string
+      description: Server-generated GUID for booking
+      example: '70a78dcb-77b3-4c84-9ca5-acdae74c0988'
 
     # END PRIMITIVES
 
@@ -546,6 +703,8 @@ components:
           type: boolean
           description: Returns true if slot is still available
           example: true
+      xml:
+        name: slot
     VenueAddress:
       type: object
       required:
@@ -593,7 +752,7 @@ components:
         phone:
           $ref: '#/components/schemas/Phone'
       xml:
-        name: account_details
+        name: accountDetails
     TokenRegistration:
       type: object
       properties:
@@ -602,7 +761,7 @@ components:
         accountRole:
           $ref: '#/components/schemas/AccountRole'
       xml:
-        name: register_token
+        name: registerToken
     SessionToken:
       type: object
       properties:
@@ -627,7 +786,7 @@ components:
         accountId:
           $ref: '#/components/schemas/AccountId'
       xml:
-        name: session_token
+        name: sessionToken
     SuccessfulSignup:
       type: object
       properties:
@@ -639,7 +798,7 @@ components:
           type: string
           example: Account Created Successfully
       xml:
-        name: signup_response
+        name: signupResponse
     SignupForm:
       type: object
       properties:
@@ -657,6 +816,41 @@ components:
           $ref: '#/components/schemas/Phone'
       xml:
         name: user
+    BookingDetails:
+      type: object
+      properties:
+        bookingId:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/BookingId'
+        accountId:
+          $ref: '#/components/schemas/AccountId'
+        slotId:
+          $ref: '#/components/schemas/SlotId'
+        venueId:
+          $ref: '#/components/schemas/VenueId'
+        transactionId:
+          $ref: '#/components/schemas/TransactionId'
+      xml:
+        name: booking
+    TransactionRecord:
+      type: object
+      properties:
+        transactionId:
+          $ref: '#/components/schemas/TransactionId'
+        accountId:
+          $ref: '#/components/schemas/AccountId'
+        bookingId:
+          $ref: '#/components/schemas/BookingId'
+        transactionDate:
+          type: string
+          format: date-time
+          description: Date and time when transaction was successfully completed
+          example: '2025-02-02T09:00:00Z'
+        previousTransactionId:
+          $ref: '#/components/schemas/TransactionId'
+      xml:
+        name: transactionRecord
   requestBodies:
     TokenRegistration:
       description: New token registration form
@@ -708,6 +902,26 @@ components:
         application/xml:
           schema:
             $ref: '#/components/schemas/SlotDetails'
+    BookingDetails:
+      description: Details of booking
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BookingDetails'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/BookingDetails'
+    TransactionRecord:
+      description: Details of transaction
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransactionRecord'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/TransactionRecord'
   responses:
     SuccessfulSignup:
       description: Successful operation
@@ -784,4 +998,39 @@ components:
             items:
               $ref: '#/components/schemas/SlotDetails'
             xml:
+              wrapped: true
               name: slots
+    BookingDetails:
+      description: Details of booking
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BookingDetails'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/BookingDetails'
+    BookingList:
+      description: List of bookings made with account
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/BookingDetails'
+        application/xml:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/BookingDetails'
+            xml:
+              wrapped: true
+              name: bookings
+    TransactionRecord:
+      description: Details of transaction
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransactionRecord'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/TransactionRecord'
